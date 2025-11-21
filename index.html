@@ -107,6 +107,7 @@ async function shareImg(){
   }
 }
   */
+  /*
   // ==== SHARE FUNCTION (FINAL VERSION) ====
 async function shareImg(){
   const img = selectedImg ?? images[Math.floor(Math.random()*images.length)];
@@ -159,6 +160,43 @@ async function cropToSquare(blob) {
 
     imgElement.src = URL.createObjectURL(blob);
   });
+}
+  */
+  // ==== FINAL SHARE FUNCTION (NO CROP / FULL IMAGE) ====
+async function shareImg(){
+  const img = selectedImg ?? images[Math.floor(Math.random()*images.length)];
+
+  try {
+    const response = await fetch(img.url);
+    const blob = await response.blob();
+
+    const file = new File([blob], img.title + ".jpg", { type: "image/jpeg" });
+
+    // 📌 FULL SHARE SUPPORT (IMAGE + TEXT + URL)
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({
+        files: [file],
+        title: img.title,
+        text: img.desc + "\nMore Photos: " + window.location.href
+      });
+    } 
+    
+    // 📌 TEXT ONLY SHARE (fallback)
+    else if (navigator.share) {   
+      await navigator.share({
+        title: img.title,
+        text: img.desc + "\nMore Photos: " + window.location.href
+      });
+    }
+
+    // 📌 ULTIMATE FALLBACK (copy text box)
+    else {
+      const fallbackText = `${img.title} - ${img.desc}\nMore Photos: ${window.location.href}`;
+      prompt("Copy & Share:", fallbackText);
+    }
+  } catch (error) {
+    alert("Error while sharing: " + error);
+  }
 }
 </script>
 </body>
