@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simple Image Gallery</title>
+
+<style>
+  body { font-family: Arial, sans-serif; margin:0; padding:20px; background:#f8f8f8; }
+  .gallery { display:flex; flex-wrap:wrap; gap:15px; justify-content:center; }
+  .card { background:white; padding:10px; border-radius:10px; width:280px; box-shadow:0 2px 6px #0002; }
+  .card img { width:100%; border-radius:10px; cursor:pointer; }
+  .card h3, .card p { margin:8px 0; text-align:center; }
+
+  /* Floating Buttons */
+  .btn-box{ position:fixed; bottom:30px; right:30px; display:flex; flex-direction:column; gap:10px; }
+  .f-btn{
+    background:#007bff; color:white; padding:12px 16px; border-radius:50px;
+    border:none; cursor:pointer; font-size:16px; box-shadow:0 4px 10px #0004;
+  }
+</style>
+</head>
+<body>
+
+<h2 style="text-align:center;">📸 My Image Gallery</h2>
+
+<div class="gallery" id="gallery"></div>
+
+<!-- Floating Buttons -->
+<div class="btn-box">
+  <button class="f-btn" onclick="downloadImg()">⬇ Download</button>
+  <button class="f-btn" onclick="shareImg()">🔗 Share</button>
+</div>
+
+<script>
+/// ==== IMAGE DATA ====
+const images = [
+  {
+    url: "https://raw.githubusercontent.com/mustafa2smi-ui/Demoshareimage/main/img1.jpg",
+    title: "Beautiful Nature",
+    desc: "Green mountains and fresh air"
+  },
+  {
+    url: "https://raw.githubusercontent.com/mustafa2smi-ui/Demoshareimage/main/img2.jpg",
+    title: "City Night",
+    desc: "Light and energy of the city"
+  },
+  {
+    url: "https://raw.githubusercontent.com/mustafa2smi-ui/Demoshareimage/main/img3.jpg",
+    title: "Calm Beach",
+    desc: "Relaxing waves and sunset"
+  }
+];
+/// =====================
+
+let selectedImg = null;
+
+// Load Gallery
+const gallery = document.getElementById("gallery");
+images.forEach((img, i)=>{
+  gallery.innerHTML += `
+    <div class="card" onclick="selectImg(${i})">
+      <img src="${img.url}" alt="${img.title}">
+      <h3>${img.title}</h3>
+      <p>${img.desc}</p>
+    </div>
+  `;
+});
+
+// Select Image
+function selectImg(i){
+  selectedImg = images[i];
+  alert("Selected: " + selectedImg.title);
+}
+
+// Download Image
+function downloadImg(){
+  const img = selectedImg ?? images[Math.floor(Math.random()*images.length)];
+  const link = document.createElement("a");
+  link.href = img.url;
+  link.download = img.title + ".jpg";
+  link.click();
+}
+
+// SHARE AS REAL FILE
+async function shareImg(){
+  const img = selectedImg ?? images[Math.floor(Math.random()*images.length)];
+
+  try {
+    const response = await fetch(img.url);
+    const blob = await response.blob();
+
+    const file = new File([blob], img.title + ".jpg", { type: "image/jpeg" });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({
+        files: [file],
+        title: img.title,
+        text: img.desc
+      });
+    } else {
+      alert("Sharing not supported on this browser!");
+    }
+
+  } catch (error) {
+    alert("Sharing failed: " + error);
+  }
+}
+</script>
+</body>
+</html>
