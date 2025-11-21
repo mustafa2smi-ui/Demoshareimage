@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Sharing Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 18px;
+        }
+        
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .card-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        
+        .card-content {
+            padding: 20px;
+        }
+        
+        .card-title {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        
+        .card-desc {
+            color: #7f8c8d;
+            margin-bottom: 15px;
+        }
+        
+        .card-actions {
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .btn-share {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .btn-share:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn-download {
+            background-color: #2ecc71;
+            color: white;
+        }
+        
+        .btn-download:hover {
+            background-color: #27ae60;
+        }
+        
+        .floating-share {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 100;
+        }
+        
+        .floating-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .floating-btn:hover {
+            background-color: #c0392b;
+            transform: scale(1.1);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+        }
+        
+        .modal-title {
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .modal-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .modal-btn-cancel {
+            background-color: #e0e0e0;
+        }
+        
+        .modal-btn-share {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .selected {
+            border: 3px solid #3498db;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #7f8c8d;
+            border-top: 1px solid #eee;
+        }
+        
+        @media (max-width: 768px) {
+            .gallery {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+            
+            .floating-share {
+                bottom: 20px;
+                right: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Image Sharing Demo</h1>
+            <p class="subtitle">Select an image to share or download, or use the floating button to share a random image</p>
+        </header>
+        
+        <div class="gallery" id="gallery">
+            <!-- Images will be inserted here by JavaScript -->
+        </div>
+        
+        <div class="floating-share">
+            <button class="floating-btn" id="floatingShareBtn">↗</button>
+        </div>
+        
+        <div class="modal" id="shareModal">
+            <div class="modal-content">
+                <h2 class="modal-title">Share Image</h2>
+                <p>You're about to share: <span id="shareTitle">Image Title</span></p>
+                <div class="modal-buttons">
+                    <button class="modal-btn modal-btn-cancel" id="cancelShare">Cancel</button>
+                    <button class="modal-btn modal-btn-share" id="confirmShare">Share Now</button>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Simple Image Sharing Demo - Created for Learning</p>
+        </footer>
+    </div>
+
+    <script>
+        // Image data
+        const images = [
+            {
+                url: "https://raw.githubusercontent.com/mustafa2smi-ui/Demoshareimage/main/img1.jpg",
+                title: "Beautiful Nature",
+                desc: "Green mountains and fresh air"
+            },
+            {
+                url: "https://raw.githubusercontent.com/mustafa2smi-ui/Demoshareimage/main/img2.jpg",
+                title: "City Night",
+                desc: "Light and energy of the city"
+            },
+            {
+                url: "https://raw.githubusercontent.com/mustafa2smi-ui/Demoshareimage/main/img3.jpg",
+                title: "Calm Beach",
+                desc: "Relaxing waves and sunset"
+            }
+        ];
+
+        // Website URL for sharing
+        const websiteUrl = "https://example.com";
+
+        // DOM elements
+        const gallery = document.getElementById('gallery');
+        const floatingShareBtn = document.getElementById('floatingShareBtn');
+        const shareModal = document.getElementById('shareModal');
+        const cancelShareBtn = document.getElementById('cancelShare');
+        const confirmShareBtn = document.getElementById('confirmShare');
+        const shareTitle = document.getElementById('shareTitle');
+
+        // Track selected image
+        let selectedImage = null;
+
+        // Function to create image cards
+        function createImageCards() {
+            images.forEach((image, index) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.dataset.index = index;
+                
+                card.innerHTML = `
+                    <img src="${image.url}" alt="${image.title}" class="card-image">
+                    <div class="card-content">
+                        <h3 class="card-title">${image.title}</h3>
+                        <p class="card-desc">${image.desc}</p>
+                        <div class="card-actions">
+                            <button class="btn btn-share" data-index="${index}">
+                                <span>Share</span>
+                            </button>
+                            <button class="btn btn-download" data-index="${index}">
+                                <span>Download</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                gallery.appendChild(card);
+                
+                // Add click event to select image
+                card.addEventListener('click', (e) => {
+                    if (!e.target.classList.contains('btn')) {
+                        // Toggle selection
+                        if (selectedImage === index) {
+                            card.classList.remove('selected');
+                            selectedImage = null;
+                        } else {
+                            // Remove selection from other cards
+                            document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
+                            card.classList.add('selected');
+                            selectedImage = index;
+                        }
+                    }
+                });
+            });
+            
+            // Add event listeners to share buttons
+            document.querySelectorAll('.btn-share').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const index = parseInt(btn.dataset.index);
+                    openShareModal(index);
+                });
+            });
+            
+            // Add event listeners to download buttons
+            document.querySelectorAll('.btn-download').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const index = parseInt(btn.dataset.index);
+                    downloadImage(index);
+                });
+            });
+        }
+
+        // Function to open share modal
+        function openShareModal(index) {
+            const image = images[index];
+            shareTitle.textContent = image.title;
+            shareModal.style.display = 'flex';
+            
+            // Set up confirm share button
+            confirmShareBtn.onclick = () => {
+                shareImage(index);
+                shareModal.style.display = 'none';
+            };
+        }
+
+        // Function to share image
+        function shareImage(index) {
+            const image = images[index];
+            const text = `Check out this ${image.title}: ${image.desc}`;
+            const shareUrl = `${websiteUrl}/image/${index}`;
+            
+            // For demo purposes, we'll just show an alert
+            // In a real implementation, you would use the Web Share API or social media URLs
+            alert(`Sharing: ${image.title}\n\nDescription: ${image.desc}\n\nURL: ${shareUrl}\n\nText: ${text}`);
+            
+            // Example of using Web Share API if available
+            if (navigator.share) {
+                navigator.share({
+                    title: image.title,
+                    text: image.desc,
+                    url: shareUrl,
+                })
+                .catch(error => console.log('Error sharing:', error));
+            }
+        }
+
+        // Function to download image
+        function downloadImage(index) {
+            const image = images[index];
+            
+            // Create a temporary anchor element
+            const a = document.createElement('a');
+            a.href = image.url;
+            a.download = `${image.title.replace(/\s+/g, '_')}.jpg`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            // For demo purposes, show a message
+            alert(`Downloading: ${image.title}`);
+        }
+
+        // Initialize the gallery
+        createImageCards();
+
+        // Floating share button event
+        floatingShareBtn.addEventListener('click', () => {
+            if (selectedImage !== null) {
+                // Share selected image
+                openShareModal(selectedImage);
+            } else {
+                // Share random image
+                const randomIndex = Math.floor(Math.random() * images.length);
+                openShareModal(randomIndex);
+            }
+        });
+
+        // Close modal when cancel button is clicked
+        cancelShareBtn.addEventListener('click', () => {
+            shareModal.style.display = 'none';
+        });
+
+        // Close modal when clicking outside the modal content
+        shareModal.addEventListener('click', (e) => {
+            if (e.target === shareModal) {
+                shareModal.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
