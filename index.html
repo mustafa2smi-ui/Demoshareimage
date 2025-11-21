@@ -81,7 +81,7 @@ function downloadImg(){
   link.download = img.title + ".jpg";
   link.click();
 }
-
+/*
 // SHARE AS REAL FILE
 async function shareImg(){
   const img = selectedImg ?? images[Math.floor(Math.random()*images.length)];
@@ -105,6 +105,60 @@ async function shareImg(){
   } catch (error) {
     alert("Sharing failed: " + error);
   }
+}
+  */
+  // ==== SHARE FUNCTION (FINAL VERSION) ====
+async function shareImg(){
+  const img = selectedImg ?? images[Math.floor(Math.random()*images.length)];
+  const response = await fetch(img.url);
+  const blob = await response.blob();
+
+  // 📌 IMAGE RESIZE (SQUARE CROPPED IMAGE)
+  const squareBlob = await cropToSquare(blob);
+
+  const file = new File([squareBlob], img.title + ".jpg", { type: "image/jpeg" });
+
+  // If device supports FILE SHARE
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    navigator.share({
+      files: [file],
+      title: img.title,
+      text: img.desc + "\nCheck more: " + window.location.href
+    });
+  }
+  // FALLBACK (Only URL & TEXT Share)
+  else {
+    const fallbackText = `${img.title} - ${img.desc}\nMore Photos: ${window.location.href}`;
+    prompt("Copy & Share:", fallbackText);
+  }
+}
+
+// ==== SQUARE CROPPING FUNCTION ====
+async function cropToSquare(blob) {
+  return new Promise((resolve) => {
+    const imgElement = document.createElement("img");
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+
+    imgElement.onload = () => {
+      const size = Math.min(imgElement.width, imgElement.height);
+      canvas.width = canvas.height = size;
+      ctx.drawImage(
+        imgElement,
+        (imgElement.width - size) / 2,  // X Cropping
+        (imgElement.height - size) / 2, // Y Cropping
+        size,
+        size,
+        0,
+        0,
+        size,
+        size
+      );
+      canvas.toBlob(resolve, "image/jpeg");
+    };
+
+    imgElement.src = URL.createObjectURL(blob);
+  });
 }
 </script>
 </body>
